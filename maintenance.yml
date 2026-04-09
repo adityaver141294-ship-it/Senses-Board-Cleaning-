@@ -1,0 +1,83 @@
+---
+- name: FIFO System Maintenance - Windows Senses Boards
+  hosts: senses_windows
+  vars:
+    retention_days: 1
+  tasks:
+    - name: Aggressive FIFO Cleanup - Windows Temporary Folders (%temp% and temp)
+      ansible.windows.win_shell: |
+        $folders = @("$env:TEMP", "C:\Windows\Temp")
+        foreach ($folder in $folders) {
+            # Implementation of "Shift+Delete" logic: Force removal bypassing Recycle Bin (standard for Remove-Item)
+            Get-ChildItem -Path "$folder\*" -Recurse -Force -ErrorAction SilentlyContinue |
+            Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-{{ retention_days }}) } |
+            Sort-Object LastWriteTime |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        }
+      ignore_errors: true
+
+    - name: FIFO Cleanup - Windows Software Distribution (Oldest First)
+      ansible.windows.win_shell: |
+        $path = "C:\Windows\SoftwareDistribution\Download"
+        if (Test-Path $path) {
+            Get-ChildItem -Path "$path\*" -Recurse -Force -ErrorAction SilentlyContinue |
+            Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-{{ retention_days }}) } |
+            Sort-Object LastWriteTime |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        }
+      ignore_errors: true
+
+    - name: FIFO Cleanup - Windows Prefetch (Oldest First)
+      ansible.windows.win_shell: |
+        $path = "C:\Windows\Prefetch"
+        Get-ChildItem -Path "$path\*" -Recurse -Force -ErrorAction SilentlyContinue |
+        Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-{{ retention_days }}) } |
+        Sort-Object LastWriteTime |
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+      ignore_errors: true
+
+    - name: FIFO Cleanup - Browser Caches (Preserving Cookies/Sessions)
+      ansible.windows.win_shell: |
+        $cachePaths = @(
+            "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Cache",
+            "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Code Cache",
+            "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Cache",
+            "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Code Cache"
+        )
+        foreach ($path in $cachePaths) {
+            if (Test-Path $path) {
+                Get-ChildItem -Path "$path\*" -Recurse -Force -ErrorAction SilentlyContinue |
+                Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-{{ retention_days }}) } |
+                Sort-Object LastWriteTime |
+                Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+      ignore_errors: true
+
+    - name: System Cache Flushing & Memory Reporting
+      ansible.windows.win_shell: |
+        Clear-DnsClientCache
+        Get-Process | Sort-Object WorkingSet -Descending | Select-Object -First 5 | Select-Object Name, @{Name="RAM(MB)";Expression={[math]::Round($_.WorkingSet / 1MB, 2)}}
+        [System.GC]::Collect()
+      register: sys_info
+
+    - name: Display System Health
+      ansible.builtin.debug:
+        var: sys_info.stdout_lines
+
+- name: FIFO System Maintenance - Linux Systems
+  hosts: linux_systems
+  become: true
+  tasks:
+    - name: Remove Old Temporary Files (FIFO - 1 Day)
+      ansible.builtin.shell: |
+        find /tmp /var/tmp -type f -mtime +0 -delete
+      ignore_errors: true
+
+- name: System Maintenance - Android Senses Boards
+  hosts: senses_android
+  tasks:
+    - name: Clear Android App Cache
+      ansible.builtin.shell: |
+        pm trim-caches 999G
+      ignore_errors: true

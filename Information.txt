@@ -1,0 +1,72 @@
+-------------------------------------------------------
+   SENSES BOARD MANAGEMENT SYSTEM - SETUP GUIDE
+-------------------------------------------------------
+
+This document provides the complete step-by-step instructions to get your Ansible-based dashboard running. You have TWO ways to set this up:
+
+=======================================================
+OPTION A: TRADITIONAL WAY (WSL + Local Node.js)
+=======================================================
+
+1. PREPARE YOUR COMPUTER (CONTROL SERVER)
+   a. INSTALL NODE.JS:
+      - Ensure Node.js (v16 or higher) is installed on your Windows machine.
+      - Run this command in your project folder to install the required libraries:
+        npm install
+   b. INSTALL WSL & ANSIBLE:
+      - Open PowerShell as Administrator and run: `wsl --install`
+      - Restart your computer if prompted.
+      - Open the 'Ubuntu' application from your Start Menu and run:
+        sudo apt update
+        sudo apt install ansible -y
+        sudo apt install python3-pip -y
+        pip3 install pywinrm
+
+2. START THE DASHBOARD
+   a. Open Command Prompt or PowerShell in your project folder.
+   b. Run: `node server.js`
+   c. Go to: http://localhost:3000
+
+
+=======================================================
+OPTION B: DOCKER WAY (Recommended - Faster)
+=======================================================
+
+1. PREPARE YOUR COMPUTER
+   - Ensure Docker Desktop is installed and running on your Windows machine.
+
+2. START THE DASHBOARD
+   a. Open Command Prompt or PowerShell in your project folder.
+   b. Run: `docker-compose up --build -d`
+   c. Go to: http://localhost:3000
+
+*Note: The Docker version comes with Ansible pre-installed in the container, so you don't need Step 1b from Option A.*
+
+
+-------------------------------------------------------
+COMMON STEPS (Required for Both Ways)
+-------------------------------------------------------
+
+STEP 3: PREPARE THE SENSES BOARDS (TARGETS)
+On each Windows Senses Board, you must allow Ansible to connect:
+1. NETWORK: Ensure the board is on the same network as this server.
+2. FIREWALL: Ensure Port 5986 (HTTPS WinRM) is open on the target boards.
+3. WINRM SETUP: Open PowerShell as Administrator on the Board and run:
+   Set-ExecutionPolicy RemoteSigned; iex (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1')
+
+STEP 4: MANAGE YOUR SYSTEMS
+1. AUTO-SYNC EXCEL:
+   - Open 'sample_inventory.xlsx'.
+   - Add Board names and IP addresses. Save and CLOSE the file.
+2. MAINTENANCE (FIFO):
+   - The 'Clear Memory' button deletes temporary files and caches older than 1 day.
+3. MONITORING:
+   - Use the 'Ping' button to check connection status.
+
+
+TROUBLESHOOTING:
+----------------
+- "Request Failed": If using Option A, ensure Ansible is installed in WSL.
+- "Connection Timeout": Check firewall/network and ensure WinRM script (Step 3) was run.
+- Excel Sync: Ensure you saved and closed the Excel file.
+-------------------------------------------------------

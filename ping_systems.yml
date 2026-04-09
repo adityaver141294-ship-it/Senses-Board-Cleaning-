@@ -1,0 +1,26 @@
+---
+- name: Connection Test - Windows Systems
+  hosts: senses_windows
+  gather_facts: false
+  tasks:
+    - name: Ping Windows Senses Boards
+      ansible.windows.win_ping:
+      register: win_ping_result
+
+    - name: Display Status
+      ansible.builtin.debug:
+        msg: "Windows Board is RECHABLE"
+      when: win_ping_result.ping == "pong"
+
+- name: Connection Test - Linux and Android Systems
+  hosts: linux_systems:senses_android
+  gather_facts: false
+  tasks:
+    - name: Ping Linux/Android Systems
+      ansible.builtin.ping:
+      register: ping_result
+
+    - name: Display Status
+      ansible.builtin.debug:
+        msg: "System is REACHABLE"
+      when: ping_result.ping == "pong"

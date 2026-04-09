@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  senses-dashboard:
+    build: .
+    container_name: senses-management-dashboard
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DOCKER_ENV=true
+    restart: always
+    # Use host networking if you need the container to see the same network as your Windows host
+    # network_mode: "host" 
+    # Or rely on standard port mapping if your boards are reachable via IP

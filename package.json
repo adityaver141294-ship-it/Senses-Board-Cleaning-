@@ -1,0 +1,19 @@
+{
+  "name": "ansible-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "scratch_inspect_excel.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "chokidar": "^5.0.0",
+    "express": "^5.2.1",
+    "xlsx": "^0.18.5"
+  }
+}
